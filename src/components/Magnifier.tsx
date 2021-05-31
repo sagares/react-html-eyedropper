@@ -59,7 +59,7 @@ const Magnifier = (props: MagnifierProps) => {
     });
   }
 
-  const pixelate = (image: any, canvas: any) => {
+  const pixelate = (image: HTMLImageElement, canvas: HTMLCanvasElement) => {
     canvas.height = image.height;
     canvas.width = image.width;
     const ctx = canvas.getContext('2d') as CanvasContext;
@@ -83,9 +83,10 @@ const Magnifier = (props: MagnifierProps) => {
     if(magnifierRef.current) {
       const x1 = magnifierRef.current.offsetLeft + size/4 + zoom*4;
       const y1 = magnifierRef.current.offsetTop + size/4 + zoom*4;
+      const currentWindow = magnifierRef.current.ownerDocument.defaultView || window;
 
-      const x2 = window.pageXOffset;
-      const y2 = window.pageYOffset;
+      const x2 = currentWindow.pageXOffset;
+      const y2 = currentWindow.pageYOffset;
       const left1 = -x1 * zoom - x2 * zoom;
       const top1 = -y1 * zoom - y2 * zoom;
       setPosition(magnifierContentRef.current, top1, left1);
@@ -176,13 +177,15 @@ const Magnifier = (props: MagnifierProps) => {
 
   const makeDraggable = () => {
     const dragHandler = magnifierRef.current as HTMLElement;
+    const currentWindow = dragHandler.ownerDocument.defaultView || window;
 
     setPosition(dragHandler, -1 * size, -1 * size);
-    window.addEventListener("mousemove", function (e) {
+    
+    currentWindow.addEventListener("mousemove", function (e) {
       moveHandler(e);
     });
 
-    window.addEventListener('resize', syncContent, false);
+    currentWindow.addEventListener('resize', syncContent, false);
     magnifierRef.current.ownerDocument.addEventListener('scroll', syncScrollBars, true);
   };
 
@@ -200,11 +203,12 @@ const Magnifier = (props: MagnifierProps) => {
     const clientX = e.clientX;
     const clientY = e.clientY;
     const magnifier = magnifierRef.current;
+    const currentWindow = magnifier.ownerDocument.defaultView || window;
     const canvas = magnifier.querySelector("canvas");
     const context = canvas?.getContext('2d');
 
-    const x = clientX*2 - zoom + window.scrollX/2;
-    const y = (clientY + window.scrollY)*2 - zoom;
+    const x = clientX*2 - zoom + currentWindow.scrollX/2;
+    const y = (clientY + currentWindow.scrollY)*2 - zoom;
     const pixels = context && context.getImageData(x, y, 1, 1).data;
     const hex = pixels && "#" + ("000000" + rgbToHex(pixels[0], pixels[1], pixels[2])).slice(-6);
     
