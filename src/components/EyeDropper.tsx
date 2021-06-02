@@ -9,11 +9,11 @@ interface Props extends EyeDropperProps {
 }
 
 const EyeDropper = (props: Props) => {
-    const {magnifierSize, pixelateValue, setColor, zoom} = props;
+    const {magnifierSize=150, pixelateValue = 6, setColor, zoom = 5} = props;
 
     const [active, setActive] = useState(false);
 
-    const handleOnClick = (e: any) => {
+    const handleOnClick = () => {
         setActive(!active);
     }
 

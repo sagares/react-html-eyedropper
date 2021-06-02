@@ -12,7 +12,11 @@ const Magnifier = (props: MagnifierProps) => {
   const magnifierRef = useRef<HTMLDivElement>(document.createElement("div"));
   const magnifierContentRef = useRef<HTMLDivElement>(document.createElement("div"));
 
-  const { active, magnifierSize: size, setColorCallback, zoom, pixelateValue } = props;
+  const { active, magnifierSize:size=150, setColorCallback } = props;
+
+  let {pixelateValue=6, zoom=5} = props;
+  zoom = zoom>10 ? 10 : zoom;
+  pixelateValue = pixelateValue > 20 ? 20: pixelateValue;
 
   const setPosition = (element: HTMLElement, top: number, left: number) => {
     element.style.left = `${left}px`;
@@ -64,8 +68,8 @@ const Magnifier = (props: MagnifierProps) => {
     canvas.width = image.width;
     const ctx = canvas.getContext('2d') as CanvasContext;
 
-    const fw = (image.width / pixelateValue) | 0;
-    const fh = (image.height / pixelateValue) | 0;
+    const fw = Math.floor(image.width / pixelateValue);
+    const fh = Math.floor(image.height / pixelateValue);
 
     if(ctx && image) {
       ctx.imageSmoothingEnabled =
@@ -215,10 +219,14 @@ const Magnifier = (props: MagnifierProps) => {
     setColorCallback && setColorCallback(hex);
   }
 
-  const rgbToHex = (r:any, g:any, b:any) => {
-    if (r > 255 || g > 255 || b > 255)
-        throw "Invalid color component";
-    return ((r << 16) | (g << 8) | b).toString(16);
+  const rgbToHex = (r:number, g:number, b:number) => {
+    
+    var componentToHex =  (c: number) => {
+        var hex = (+c).toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    };
+
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
   }
 
   return active ? (
@@ -253,22 +261,21 @@ const Magnifier = (props: MagnifierProps) => {
           paddingTop: "0px",
         }}
       ></div>
-      <div
-      onClick={getColorFromCanvas}
+      <div onClick={getColorFromCanvas}
         className="magnifier-glass"
         style={{
-          backgroundSize: `${2*pixelateValue + 3}px ${2*pixelateValue + 3}px`,
-          backgroundPosition: "center",
-          position: "absolute",
-          top: "0px",
-          left: "0px",
-          width: "100%",
-          height: "100%",
-          opacity: 1,
+          alignItems: "center",
           cursor: "none",
           display: "grid",
+          backgroundPosition: "center",
+          backgroundSize: `${2*pixelateValue + 3}px ${2*pixelateValue + 3}px`,
+          height: "100%",
           justifyContent: "center",
-          alignItems: "center"
+          left: "0px",
+          opacity: 1,
+          position: "absolute",
+          top: "0px",
+          width: "100%",
         }}
       >
         <svg 
@@ -278,9 +285,9 @@ const Magnifier = (props: MagnifierProps) => {
           height={2*pixelateValue + 3}
           style={{
             border: "2px solid #fff",
+            boxShadow: "inset 0 0 0 1px #000000",
             position: "relative",
             margin: "0 auto",
-            boxShadow: "inset 0 0 0 1px #000000"
           }}>
           </svg>
       </div>
