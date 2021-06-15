@@ -25,7 +25,7 @@ const Magnifier = (props: MagnifierProps) => {
   }
 
   //const [targetElementRect, setTargetElementRect] = useState({top: 0, left: 0, x: 0, y:0, width: 0, height: 0});
-  const [magnifierPos, setMagnifierPos] = useState(initialPosition);
+  const [magnifierPos, setMagnifierPos] = useState({...initialPosition});
   const [magnifierContentPos, setMagnifierContentPos] = useState({top: 0, left: 0});
   const [magnifierContentDimension, setMagnifierContentDimension] = useState({width: 0, height: 0});
   const [magnifierDisplay, setMagnifierDisplay] = useState("none");
@@ -120,7 +120,6 @@ const Magnifier = (props: MagnifierProps) => {
         }
       }
     }
-      
   }
 
   const syncScroll = (ctrl: any) => {
@@ -187,7 +186,6 @@ const Magnifier = (props: MagnifierProps) => {
     const currentWindow = dragHandler?.ownerDocument.defaultView || window;
     
     currentWindow.addEventListener("mousemove", moveHandler);
-
     currentWindow.addEventListener('resize', syncContent, false);
     currentWindow.addEventListener('scroll', syncScrollBars, true);
   };
@@ -210,7 +208,6 @@ const Magnifier = (props: MagnifierProps) => {
   }
 
   useEffect(() => {
-
     const currentWindow = magnifierRef?.current?.ownerDocument?.defaultView || window;
 
     if(active) {
@@ -232,7 +229,6 @@ const Magnifier = (props: MagnifierProps) => {
   }, [magnifierPos]);
 
   const rgbToHex = (r:number, g:number, b:number) => {
-    
     var componentToHex =  (c: number) => {
         var hex = (+c).toString(16);
         return hex.length === 1 ? "0" + hex : hex;
