@@ -200,8 +200,8 @@ const Magnifier = (props: MagnifierProps) => {
     const canvas = magnifier.querySelector("canvas");
     const context = canvas?.getContext('2d');
 
-    const x = clientX*2 - zoom + currentWindow.scrollX/2;
-    const y = (clientY + currentWindow.scrollY)*2 - zoom;
+    const x = (clientX + currentWindow.scrollX) * 2 - zoom;
+		const y = (clientY + currentWindow.scrollY) * 2 - zoom;
     const pixels = context && context.getImageData(x, y, 1, 1).data;
     const hex = pixels && "#" + ("000000" + rgbToHex(pixels[0], pixels[1], pixels[2])).slice(-6);
     
