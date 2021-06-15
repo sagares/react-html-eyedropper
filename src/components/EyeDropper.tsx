@@ -9,7 +9,7 @@ interface Props extends EyeDropperProps {
 }
 
 const EyeDropper = (props: Props) => {
-    const {magnifierSize=150, pixelateValue = 6, setColor, zoom = 5} = props;
+    const {areaSelector="body", magnifierSize=150, pixelateValue = 6, setColor, zoom = 5} = props;
 
     const [active, setActive] = useState(false);
 
@@ -24,6 +24,7 @@ const EyeDropper = (props: Props) => {
 
     const magnifierProps: MagnifierProps = {
         active,
+        areaSelector,
         zoom,
         pixelateValue,
         magnifierSize,

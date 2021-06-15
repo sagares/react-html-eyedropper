@@ -9,22 +9,23 @@ interface CanvasContext extends CanvasRenderingContext2D {
 };
 
 const Magnifier = (props: MagnifierProps) => {
-  const magnifierRef = useRef<HTMLDivElement>(document.createElement("div"));
-  const magnifierContentRef = useRef<HTMLDivElement>(document.createElement("div"));
-
-  const { active, magnifierSize:size=150, setColorCallback } = props;
-
+  const { active, areaSelector="body", magnifierSize:size=150, setColorCallback } = props;
   let {pixelateValue=6, zoom=5} = props;
   zoom = zoom>10 ? 10 : zoom;
   pixelateValue = pixelateValue > 20 ? 20: pixelateValue;
   const pixelBoxSize = 2*pixelateValue + 3;
-
   const initialPosition = {
     top:-1 * size, 
     left: -1 * size 
   }
 
-  //const [targetElementRect, setTargetElementRect] = useState({top: 0, left: 0, x: 0, y:0, width: 0, height: 0});
+  const magnifierRef = useRef<HTMLDivElement>(document.createElement("div"));
+  const magnifierContentRef = useRef<HTMLDivElement>(document.createElement("div"));
+
+  const [target, setTarget] = useState({
+    element: document.createElement("div") as HTMLElement,
+    rect: {top: 0, left: 0, x: 0, y:0, width: 0, height: 0}
+  });
   const [magnifierPos, setMagnifierPos] = useState({...initialPosition});
   const [magnifierContentPos, setMagnifierContentPos] = useState({top: 0, left: 0});
   const [magnifierContentDimension, setMagnifierContentDimension] = useState({width: 0, height: 0});
@@ -47,16 +48,14 @@ const Magnifier = (props: MagnifierProps) => {
         magnifier.style.backgroundColor =  color;
     }
 
-    html2canvas(bodyOriginal).then(canvas => {
-      const width = ownerDocument.body.clientWidth;
-      const height = ownerDocument.body.clientHeight;
+    html2canvas(target.element).then(canvas => {
+      const {rect: {height, width }} = target;
 
       setMagnifierContentDimension(({width, height}));
-
       magnifierContent.appendChild(canvas);
+
       const image = new Image();
       image.src = canvas.toDataURL();
-
       image.onload = pixelate.bind(null, image, canvas);
     });
   }
@@ -76,7 +75,6 @@ const Magnifier = (props: MagnifierProps) => {
       ctx.webkitImageSmoothingEnabled = false;
 
       ctx.drawImage(image, 0, 0, fw, fh);
-
       ctx.drawImage(canvas, 0, 0, fw, fh, 0, 0, image.width, image.height);
     }
   }
@@ -156,7 +154,7 @@ const Magnifier = (props: MagnifierProps) => {
     return false;
   }
 
-  function syncContent() {
+  const syncContent = () => {
     if (active) {
       prepareContent();
       syncViewport();
@@ -168,10 +166,9 @@ const Magnifier = (props: MagnifierProps) => {
     let dragObject = magnifierRef.current;
 
     if (dragObject !== null) {
-      const pageX = e.clientX;
-      const pageY = e.clientY;
-      const left = pageX - size/2;
-      const top = pageY - size/2;
+      const {clientX, clientY} = e;
+      const left = clientX - size/2;
+      const top = clientY - size/2;
 
       setMagnifierPos({
         top, 
@@ -191,8 +188,7 @@ const Magnifier = (props: MagnifierProps) => {
   };
 
   const getColorFromCanvas = (e:any) => {
-    const clientX = e.clientX;
-    const clientY = e.clientY;
+    const { clientX, clientY } = e;
     const magnifier = magnifierRef.current;
     const currentWindow = magnifier.ownerDocument.defaultView || window;
     const canvas = magnifier.querySelector("canvas");
@@ -225,8 +221,14 @@ const Magnifier = (props: MagnifierProps) => {
   }, [active]);
 
   useEffect(() => {
-    console.log(magnifierPos);
-  }, [magnifierPos]);
+    const targetEle = magnifierRef.current?.ownerDocument.querySelector(areaSelector) as HTMLElement;
+    if(targetEle) {
+      setTarget({
+        element: targetEle,
+        rect: targetEle.getBoundingClientRect()
+      });
+    }
+  }, [])
 
   const rgbToHex = (r:number, g:number, b:number) => {
     var componentToHex =  (c: number) => {

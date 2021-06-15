@@ -1,4 +1,5 @@
 export interface EyeDropperProps {
+    areaSelector?: string;
     pixelateValue?: number;
     magnifierSize?: number;
     zoom?: number;
