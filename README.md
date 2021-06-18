@@ -12,7 +12,7 @@ This eye dropper exposes an EyeDropper component which takes following props:
 5. **areaSelector** - (Optional) CSS selector of the element, only on which eydropper will be visible. By default this is `body`.
 6. **loader** - (Optional) Since the canvas generation may take sometime, a loader element can be shown in place of actual eye dropper.
 
-###Example
+### Example
 ```
 <EyeDropper setColor={(hex:string) => console.log(hex)}>
      <button className="btn">Eye Dropper</button>
