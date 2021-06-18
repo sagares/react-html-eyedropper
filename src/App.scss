@@ -2,7 +2,7 @@ body {
   background-color: #f5f5f5;
 }
 .App {
-  margin: 5% auto;
+  margin: 0 auto;
   width: 60%;
 
   * {
@@ -41,6 +41,7 @@ body {
   display: grid;
   grid-template-columns: 15% 35% 10% 40%;
   grid-gap: 1rem;
+  padding-top: 5%;
 }
 
 .grid-wrapper {
@@ -53,6 +54,9 @@ body {
   padding: 1rem;
 
   .box {
+    align-items: center;
+    justify-content: center;
+    display: grid;
     padding: 10px;
     width: 100%;
     border-radius: 2px;
@@ -122,6 +126,7 @@ body {
         font-weight: 700;
         border-radius: 2px;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
 
         &:first-child {
           grid-column: 2/3;

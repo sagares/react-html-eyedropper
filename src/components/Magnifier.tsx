@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import html2canvas from "html2canvas";
+import React, { useEffect, useRef, useState } from "react";
 import { MagnifierProps } from "../types";
 
 interface CanvasContext extends CanvasRenderingContext2D {
@@ -9,7 +8,7 @@ interface CanvasContext extends CanvasRenderingContext2D {
 };
 
 const Magnifier = (props: MagnifierProps) => {
-  const { active, areaSelector="body", magnifierSize:size=150, setColorCallback } = props;
+  const { active, canvas, magnifierSize:size=150, setColorCallback, target} = props;
   let {pixelateValue=6, zoom=5} = props;
   zoom = zoom>10 ? 10 : zoom;
   pixelateValue = pixelateValue > 20 ? 20: pixelateValue;
@@ -22,10 +21,6 @@ const Magnifier = (props: MagnifierProps) => {
   const magnifierRef = useRef<HTMLDivElement>(document.createElement("div"));
   const magnifierContentRef = useRef<HTMLDivElement>(document.createElement("div"));
 
-  const [target, setTarget] = useState({
-    element: document.createElement("div") as HTMLElement,
-    rect: {top: 0, left: 0, x: 0, y:0, width: 0, height: 0}
-  });
   const [magnifierPos, setMagnifierPos] = useState({...initialPosition});
   const [magnifierContentPos, setMagnifierContentPos] = useState({top: 0, left: 0});
   const [magnifierContentDimension, setMagnifierContentDimension] = useState({width: 0, height: 0});
@@ -35,7 +30,7 @@ const Magnifier = (props: MagnifierProps) => {
     const magnifier = magnifierRef.current;
     const magnifierContent = magnifierContentRef.current;
 
-    if(!magnifier && !magnifierContent) {
+    if(!magnifier || !magnifierContent) {
       return;
     }
 
@@ -48,16 +43,15 @@ const Magnifier = (props: MagnifierProps) => {
         magnifier.style.backgroundColor =  color;
     }
 
-    html2canvas(target.element).then(canvas => {
-      const {rect: {height, width }} = target;
+    const {rect: {height, width }} = target.current;
+    setMagnifierContentDimension(({width, height}));
+    canvas && magnifierContent.appendChild(canvas);
 
-      setMagnifierContentDimension(({width, height}));
-      magnifierContent.appendChild(canvas);
-
+    if(canvas) {
       const image = new Image();
       image.src = canvas.toDataURL();
       image.onload = pixelate.bind(null, image, canvas);
-    });
+    }
   }
 
   const pixelate = (image: HTMLImageElement, canvas: HTMLCanvasElement) => {
@@ -80,27 +74,22 @@ const Magnifier = (props: MagnifierProps) => {
   }
 
   const syncViewport = () => {
-    if(magnifierRef.current) {
-      const x1 = magnifierRef.current.offsetLeft + size/4 + zoom*4;
-      const y1 = magnifierRef.current.offsetTop + size/4 + zoom*4;
-      const currentWindow = magnifierRef.current.ownerDocument.defaultView || window;
+    const {rect: { left, top }} = target.current;
+    const x1 = magnifierRef.current.offsetLeft - left + size/4 + zoom*4;
+    const y1 = magnifierRef.current.offsetTop - top + size/4 + zoom*4;
+    const currentWindow = magnifierRef.current.ownerDocument.defaultView || window;
 
-      const x2 = currentWindow.pageXOffset;
-      const y2 = currentWindow.pageYOffset;
-      const left1 = -x1 * zoom - x2 * zoom;
-      const top1 = -y1 * zoom - y2 * zoom;
-      setMagnifierContentPos({
-        top: top1,
-        left: left1
-      });
-    }
+    const x2 = currentWindow.pageXOffset;
+    const y2 = currentWindow.pageYOffset;
+    const left1 = -x1 * zoom - x2 * zoom;
+    const top1 = -y1 * zoom - y2 * zoom;
+    setMagnifierContentPos({
+      top: top1,
+      left: left1
+    });
   }
 
-  const syncScrollBars = (e: any) => {
-    if(!magnifierRef.current) {
-      return;
-    }
-    
+  const syncScrollBars = (e: any) => {  
     const ownerDocument = magnifierRef.current.ownerDocument;
     if (e && e.target) {
       syncScroll(e.target);
@@ -162,21 +151,21 @@ const Magnifier = (props: MagnifierProps) => {
     }
   }
 
-  const moveHandler = useCallback((e: any) => {
-    let dragObject = magnifierRef.current;
-
-    if (dragObject !== null) {
-      const {clientX, clientY} = e;
-      const left = clientX - size/2;
-      const top = clientY - size/2;
-
-      setMagnifierPos({
-        top, 
-        left
-      });
-      syncViewport();
+  const moveHandler = (e: MouseEvent) => {
+    const {clientX, clientY} = e;
+    const { rect: { top, left, width, height }} = target.current;
+    if(clientX <= left || clientY <= top || clientX >= left + width || clientY >= top + height) {
+      return;
     }
-  }, []);
+    const left1 = clientX - size/2;
+    const top1 = clientY - size/2;
+
+    setMagnifierPos({
+      top: top1, 
+      left: left1
+    });
+    syncViewport();
+  }
 
   const makeDraggable = () => {
     const dragHandler = magnifierRef.current as HTMLElement;
@@ -185,17 +174,19 @@ const Magnifier = (props: MagnifierProps) => {
     currentWindow.addEventListener("mousemove", moveHandler);
     currentWindow.addEventListener('resize', syncContent, false);
     currentWindow.addEventListener('scroll', syncScrollBars, true);
-  };
+  }
 
-  const getColorFromCanvas = (e:any) => {
+  const getColorFromCanvas = (e: any) => {
     const { clientX, clientY } = e;
     const magnifier = magnifierRef.current;
-    const currentWindow = magnifier.ownerDocument.defaultView || window;
+    const {scrollX, scrollY} = magnifier.ownerDocument.defaultView || window;
+
     const canvas = magnifier.querySelector("canvas");
     const context = canvas?.getContext('2d');
+    const {rect: {left, top}} = target.current;
 
-    const x = (clientX + currentWindow.scrollX) * 2 - zoom;
-		const y = (clientY + currentWindow.scrollY) * 2 - zoom;
+    const x = (clientX + scrollX - left) * 2 - zoom;
+		const y = (clientY + scrollY - top) * 2 - zoom;
     const pixels = context && context.getImageData(x, y, 1, 1).data;
     const hex = pixels && "#" + ("000000" + rgbToHex(pixels[0], pixels[1], pixels[2])).slice(-6);
     
@@ -205,7 +196,6 @@ const Magnifier = (props: MagnifierProps) => {
 
   useEffect(() => {
     const currentWindow = magnifierRef?.current?.ownerDocument?.defaultView || window;
-
     if(active) {
       prepareContent();
       setMagnifierDisplay("block");
@@ -216,26 +206,14 @@ const Magnifier = (props: MagnifierProps) => {
       setMagnifierPos({...initialPosition});
       setMagnifierDisplay("none");
     }
-
-    return () => currentWindow.removeEventListener("mousemove", moveHandler, true);
+    return () => currentWindow.removeEventListener("mousemove", moveHandler);
   }, [active]);
-
-  useEffect(() => {
-    const targetEle = magnifierRef.current?.ownerDocument.querySelector(areaSelector) as HTMLElement;
-    if(targetEle) {
-      setTarget({
-        element: targetEle,
-        rect: targetEle.getBoundingClientRect()
-      });
-    }
-  }, [])
 
   const rgbToHex = (r:number, g:number, b:number) => {
     var componentToHex =  (c: number) => {
         var hex = (+c).toString(16);
         return hex.length === 1 ? "0" + hex : hex;
     };
-
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
   }
 
@@ -244,54 +222,28 @@ const Magnifier = (props: MagnifierProps) => {
       ref={magnifierRef}
       className="magnifier"
       style={{
-        backgroundColor: "#fff",
-        border: "2px solid #555",
-        borderRadius: "50%",
         display: magnifierDisplay,
         height: `${size}px`,
-        overflow: "hidden",
-        position: "fixed",
         left: `${magnifierPos.left}px`,
         top: `${magnifierPos.top}px`,
-        width: `${size}px`,
-        zIndex: 10000,
+        width: `${size}px`
       }}
     >
       <div
         ref={magnifierContentRef}
         className="magnifier-content"
         style={{
-          display: "block",
           height: `${magnifierContentDimension.height}px`,
           left: `${magnifierContentPos.left}px`,
-          marginLeft: "0px",
-          marginTop: "0px",
-          overflow: "visible",
-          paddingTop: "0px",
-          position: "absolute",
           top: `${magnifierContentPos.top}px`,
           transform: `scale(${zoom})`,
-          transformOrigin: "left top",
-          userSelect: "none",
           width: `${magnifierContentDimension.width}px`,
         }}
       ></div>
       <div onClick={getColorFromCanvas}
         className="magnifier-glass"
         style={{
-          alignItems: "center",
-          backgroundImage: "linear-gradient(to right, grey 1px, transparent 1px), linear-gradient(to bottom, grey 1px, transparent 1px)",
-          backgroundPosition: "center",
-          backgroundSize: `${pixelBoxSize}px ${pixelBoxSize}px`,
-          cursor: "none",
-          display: "grid",
-          height: "100%",
-          justifyContent: "center",
-          left: "0px",
-          opacity: 1,
-          position: "absolute",
-          top: "0px",
-          width: "100%",
+          backgroundSize: `${pixelBoxSize}px ${pixelBoxSize}px`
         }}
       >
         <svg 
@@ -299,12 +251,7 @@ const Magnifier = (props: MagnifierProps) => {
           viewBox="0 0 12 12" 
           width={pixelBoxSize} 
           height={pixelBoxSize}
-          style={{
-            border: "2px solid #fff",
-            boxShadow: "inset 0 0 0 1px #000000",
-            margin: "0 auto",
-            position: "relative",
-          }}>
+          className="cursor-svg">
           </svg>
       </div>
     </div>
