@@ -1,3 +1,4 @@
+
 # react-html-eydropper
 ## An eye dropper color picker built using react.
 
@@ -19,4 +20,4 @@ This eye dropper exposes an EyeDropper component which takes following props:
 
 ```
 
-<img width="1068" alt="Screenshot 2021-05-31 at 1 42 28 PM" src="https://user-images.githubusercontent.com/31887015/120173049-4870e680-c221-11eb-9f99-faec1830563e.png">
+![EyeDropper](https://user-images.githubusercontent.com/31887015/122559564-2074e600-d05d-11eb-9742-99966f96be88.gif)
