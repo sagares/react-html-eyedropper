@@ -1,5 +1,5 @@
 # react-eye-dropper
-An eye dropper color picker built using react.
+##An eye dropper color picker built using react.
 
 This eyedropper does not just pick color from an image, but it helps picking color from whole web page. It provides a magnifier which on hover of webpage elements, shows the elements in pixelated form inside it. On clicking on a pixelated block it the color is picked.
 
