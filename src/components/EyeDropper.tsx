@@ -25,7 +25,7 @@ const EyeDropper = (props: EyeDropperProps) => {
   };
 
   const setColorCallback = (hex: string) => {
-    var promise = Promise.resolve();
+    const promise = Promise.resolve();
     setColor(hex);
     setCanvas(null);
 
