@@ -9,10 +9,13 @@ import RefreshIcon from "@material-ui/icons/Refresh";
 function App() {
   const [hexValue, setHexValue] = useState("#000000");
   const [pixelateValue, setPixelateValue] = useState(6);
-  const appRef = useRef(document.createElement("div"));
+  const setIsCanvasAvailableRef = useRef(null);
 
   const setColor = (hex: string) => {
     setHexValue(hex);
+    /** 
+     * call setIsCanvasAvaialableRef.current(false) if the color is being applied from another source.
+     * */
   };
 
   const handleMouseEnter = (e: any) => {
@@ -63,12 +66,13 @@ function App() {
     <div className="App">
       <div className="color-form">
         <EyeDropper
-          areaSelector="body"
+          areaSelector=".grid-wrapper"
           setColor={setColor}
           pixelateValue={pixelateValue}
           zoom={5}
           magnifierSize={150}
           loader={getLoaderIcon()}
+          ref={setIsCanvasAvailableRef}
         >
           <button className="btn">
             <Colorize />
@@ -91,7 +95,7 @@ function App() {
           valueLabelDisplay="auto"
         />
       </div>
-      <div className="grid-wrapper" ref={appRef}>
+      <div className="grid-wrapper">
         {divElements()}
         <div className="box box-nested">
           <div className="nested-box">Button 1</div>

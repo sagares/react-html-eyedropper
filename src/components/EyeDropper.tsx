@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { ForwardedRef, forwardRef, MutableRefObject, useEffect, useRef, useState } from "react";
 import { EyeDropperProps, MagnifierProps, TargetRef } from "../types";
 import Magnifier from "./Magnifier";
 import "./EyeDropper.scss";
 import html2canvas from "html2canvas";
 
-const EyeDropper = (props: EyeDropperProps) => {
+const EyeDropper = forwardRef((props: EyeDropperProps, ref: ForwardedRef<Function>) => {
   const {
     areaSelector = "body",
     magnifierSize = 150,
@@ -19,6 +19,7 @@ const EyeDropper = (props: EyeDropperProps) => {
   const [active, setActive] = useState(false);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [isCanvasAvailable, setIsCanvasAvailable] = useState(false);
+  (ref as MutableRefObject<Function>).current = setIsCanvasAvailable;
 
   const handleOnClick = () => {
     setActive(!active);
@@ -77,6 +78,6 @@ const EyeDropper = (props: EyeDropperProps) => {
       {<Magnifier {...magnifierProps} />}
     </div>
   );
-};
+});
 
 export default EyeDropper;
